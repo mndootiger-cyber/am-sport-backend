@@ -31,7 +31,7 @@ class CartManager {
     }
   }
 
-  addItem(product, size, color, quantity = 1) {
+  addItem(product, size, color, quantity = 1, colorLabel = null) {
     if (!product || !size || !color) {
       console.warn('[Cart] Missing required fields:', { product, size, color });
       return false;
@@ -54,6 +54,7 @@ class CartManager {
         image: product.image,
         size,
         color,
+        colorLabel: colorLabel || color, // الاسم العربي المعروض للعميل
         quantity,
         lineTotal: product.price * quantity,
       });
@@ -195,7 +196,7 @@ function renderCartPage() {
           <div class="cart-item-meta">
             <span>الحجم: ${item.size}</span>
             <span class="color-dot" style="background: ${getColorHex(item.color)};"></span>
-            <span>${item.color}</span>
+            <span>${item.colorLabel || item.color}</span>
           </div>
           <div class="qty-ctrl">
             <button onclick="decreaseQty('${item.cartId}')" aria-label="تقليل">−</button>
@@ -300,7 +301,7 @@ window.checkoutViaWhatsApp = function () {
     const priceText = item.price.toLocaleString('ar-EG');
     const lineText = item.lineTotal.toLocaleString('ar-EG');
     lines.push(`${idx + 1}. ${item.name}`);
-    lines.push(`   الحجم: ${item.size} | اللون: ${item.color}`);
+    lines.push(`   الحجم: ${item.size} | اللون: ${item.colorLabel || item.color}`);
     lines.push(`   الكمية: ${item.quantity} × ${priceText} ج.م = ${lineText} ج.م`);
     lines.push('');
   });
@@ -331,12 +332,27 @@ function resolveImageUrl(img) {
 
 function getColorHex(colorName) {
   const colorMap = {
-    'Black': '#111',
-    'White': '#FAFAF8',
-    'Charcoal': '#3D3D40',
-    'Graphite': '#5A5A5E',
-    'Ivory': '#F5F0E8',
-    'Grey': '#8A8A8E',
+    'Black':        '#111111',
+    'White':        '#FAFAF8',
+    'Charcoal':     '#3D3D40',
+    'Graphite':     '#5A5A5E',
+    'Ivory':        '#F5F0E8',
+    'Grey':         '#8A8A8E',
+    'BrightRed':    '#E30613',
+    'Burgundy':     '#6D071A',
+    'WineRed':      '#722F37',
+    'CoralRed':     '#FF6B5B',
+    'HotPink':      '#FF69B4',
+    'BabyPink':     '#F4C2C2',
+    'OrchidPink':   '#DA95C4',
+    'DustyMauve':   '#B784A0',
+    'Beige':        '#E8D5B7',
+    'LightGray':    '#D3D3D3',
+    'CharcoalGray': '#4A4A4D',
+    'RoyalBlue':    '#4169E1',
+    'SkyBlue':      '#87CEEB',
+    'NavyBlue':     '#1B1F3B',
+    'OliveGreen':   '#708238',
   };
   return colorMap[colorName] || '#999';
 }

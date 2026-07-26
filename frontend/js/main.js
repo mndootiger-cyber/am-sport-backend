@@ -535,7 +535,7 @@ function openModal(product, api) {
 
 function updateWhatsApp(product) {
   const sizeText  = selectedSize  ? `\n- المقاس: ${selectedSize}`  : '';
-  const colorText = selectedColor ? `\n- اللون: ${selectedColor}` : '';
+  const colorText = selectedColor ? `\n- اللون: ${COLOR_LABELS_AR[selectedColor] || selectedColor}` : '';
   const msg = encodeURIComponent(
     `مرحباً AM SPORT،\n\nأريد الاستفسار عن:\n- ${product.name_ar || product.name}\n- السعر: ${product.price} ج.م${sizeText}${colorText}\n\nيرجى تأكيد التوافر.`
   );
@@ -555,7 +555,7 @@ document.getElementById('modalAddToCartBtn')?.addEventListener('click', () => {
     return;
   }
 
-  cart.addItem(currentModalProduct, selectedSize || 'one-size', selectedColor || 'default', 1);
+  cart.addItem(currentModalProduct, selectedSize || 'one-size', selectedColor || 'default', 1, COLOR_LABELS_AR[selectedColor] || selectedColor);
   showToast('تمت الإضافة إلى السلة ✓', 'success');
 });
 
