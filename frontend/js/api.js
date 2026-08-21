@@ -8,8 +8,7 @@
 class PilatesApiService {
   constructor() {
     // رابط الباك إند الفعلي على Railway (بعد رفع الموقع)
-    this.baseUrl = 'https://itgirl-pilates-production.up.railway.app/api';
-  }
+this.baseUrl = 'https://am-sport-backend-production-0fac.up.railway.app/api';  }
 
   /* ── جلب كل المنتجات ─────────────────────────────── */
   async getAllProducts() {
