@@ -14,7 +14,7 @@ const errorMsg  = document.getElementById('errorMsg');
 const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
 const LOGIN_URL = isLocal
   ? 'http://localhost:5000/api/auth/login'
-  : 'https://itgirl-pilates-production.up.railway.app/api/auth/login';
+  : 'https://am-sport-backend-production-0fac.up.railway.app/api/auth/login';
 
 function showError(msg) {
   errorMsg.textContent = msg;
