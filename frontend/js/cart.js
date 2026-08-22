@@ -5,7 +5,7 @@
  */
 
 const CART_STORAGE_KEY = 'cart';
-const WHATSAPP_PHONE = '201284796461';
+const WHATSAPP_PHONE = '201559848849';
 
 class CartManager {
   constructor() {
