@@ -64,6 +64,27 @@ class PilatesApiService {
     });
   }
 
+  /* ── جلب كل الطلبات (للأدمن فقط) ─────────────────── */
+  async getAllOrders(token) {
+    const res = await fetch(`${this.baseUrl}/orders`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error(`فشل تحميل الطلبات (${res.status})`);
+    return res.json();
+  }
+
+  /* ── تحديث حالة طلب (للأدمن فقط) ─────────────────── */
+  async updateOrderStatus(id, status, token) {
+    return fetch(`${this.baseUrl}/orders/${id}/status`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ status }),
+    });
+  }
+
   /* ── تجهيز رابط الصورة (لو الرابط ناقص أو نسبي) ───── */
   resolveImageUrl(image) {
     if (!image) {
