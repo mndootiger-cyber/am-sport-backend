@@ -410,9 +410,13 @@ let selectedSize  = null;
 let selectedColor = null;
 let currentModalProduct = null;
 let currentWhatsAppUrl = '';
+let quantity = 1;
 
 function openModal(product, api) {
   currentModalProduct = product;
+  quantity = 1;
+  const qtyDisplayEl = document.getElementById('qtyDisplay');
+  if (qtyDisplayEl) qtyDisplayEl.textContent = '1';
   const imgSrc   = api.resolveImageUrl(product.image);
   const catLabel = product.gender === 'women' ? "WOMEN'S WEAR" : "MEN'S WEAR";
 
@@ -542,6 +546,16 @@ function updateWhatsApp(product) {
   currentWhatsAppUrl = `https://wa.me/${WHATSAPP_PHONE}?text=${msg}`;
 }
 
+/* ── QUANTITY SELECTOR ─────────────────────────────────────── */
+document.getElementById('qtyMinusBtn')?.addEventListener('click', () => {
+  if (quantity > 1) quantity--;
+  document.getElementById('qtyDisplay').textContent = quantity;
+});
+document.getElementById('qtyPlusBtn')?.addEventListener('click', () => {
+  quantity++;
+  document.getElementById('qtyDisplay').textContent = quantity;
+});
+
 /* ── MODAL ACTION BUTTONS ─────────────────────────────────── */
 document.getElementById('modalAddToCartBtn')?.addEventListener('click', () => {
   if (!currentModalProduct) return;
@@ -555,13 +569,124 @@ document.getElementById('modalAddToCartBtn')?.addEventListener('click', () => {
     return;
   }
 
-  cart.addItem(currentModalProduct, selectedSize || 'one-size', selectedColor || 'default', 1, COLOR_LABELS_AR[selectedColor] || selectedColor);
+  cart.addItem(currentModalProduct, selectedSize || 'one-size', selectedColor || 'default', quantity, COLOR_LABELS_AR[selectedColor] || selectedColor);
   showToast('تمت الإضافة إلى السلة ✓', 'success');
 });
 
 document.getElementById('whatsappDirectBtn')?.addEventListener('click', () => {
   if (!currentWhatsAppUrl) return;
   window.open(currentWhatsAppUrl, '_blank');
+});
+
+/* ── BUY NOW → CHECKOUT ───────────────────────────────────── */
+let pendingCheckoutItem = null;
+
+document.getElementById('buyNowBtn')?.addEventListener('click', (e) => {
+  const product = currentModalProduct;
+  if (!product) return;
+
+  if (product.colors?.length && !selectedColor) {
+    showToast('يرجى اختيار اللون أولاً', 'error');
+    return;
+  }
+  if (product.sizes?.length && !selectedSize) {
+    showToast('يرجى اختيار المقاس أولاً', 'error');
+    return;
+  }
+
+  const unitPrice = product.price;
+  const total = unitPrice * quantity;
+
+  pendingCheckoutItem = {
+    productId: product._id,
+    name: product.name_ar || product.name,
+    image: product.image,
+    color: selectedColor ? (COLOR_LABELS_AR[selectedColor] || selectedColor) : '',
+    size: selectedSize || '',
+    quantity,
+    price: unitPrice,
+  };
+
+  // تعبئة ملخص الطلب
+  const api = window.api;
+  document.getElementById('checkoutProductImg').src   = api.resolveImageUrl(product.image);
+  document.getElementById('checkoutProductName').textContent = pendingCheckoutItem.name;
+  const metaParts = [];
+  if (pendingCheckoutItem.color) metaParts.push(`اللون: ${pendingCheckoutItem.color}`);
+  if (pendingCheckoutItem.size)  metaParts.push(`المقاس: ${pendingCheckoutItem.size}`);
+  metaParts.push(`الكمية: ${quantity}`);
+  document.getElementById('checkoutProductMeta').textContent = metaParts.join(' | ');
+  document.getElementById('checkoutProductTotal').textContent = `${total.toLocaleString('ar-EG')} ج.م`;
+  document.getElementById('checkoutTotalAmount').textContent  = `${total.toLocaleString('ar-EG')} ج.م`;
+
+  closeModal();
+  document.getElementById('checkoutModal').style.display = 'flex';
+});
+
+/* ── CHECKOUT FORM SUBMISSION ─────────────────────────────── */
+function showCkError(fieldId, message) {
+  const el = document.getElementById(fieldId);
+  if (el) { el.textContent = message; el.style.display = 'block'; }
+}
+function hideCkErrors() {
+  document.querySelectorAll('.ck-error').forEach(el => { el.style.display = 'none'; el.textContent = ''; });
+}
+
+let isSubmittingOrder = false;
+
+document.getElementById('checkoutForm')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (isSubmittingOrder || !pendingCheckoutItem) return;
+  hideCkErrors();
+
+  const name        = document.getElementById('ckName').value.trim();
+  const phone       = document.getElementById('ckPhone').value.trim();
+  const governorate = document.getElementById('ckGovernorate').value;
+  const address     = document.getElementById('ckAddress').value.trim();
+  const notes       = document.getElementById('ckNotes').value.trim();
+
+  let hasError = false;
+  if (!name) { showCkError('ckNameError', 'الرجاء إدخال الاسم الكامل.'); hasError = true; }
+  const phoneDigits = phone.replace(/\D/g, '');
+  if (!phone || phoneDigits.length < 10) { showCkError('ckPhoneError', 'الرجاء إدخال رقم هاتف صحيح.'); hasError = true; }
+  if (!governorate) { showCkError('ckGovError', 'الرجاء اختيار المحافظة.'); hasError = true; }
+  if (!address) { showCkError('ckAddressError', 'الرجاء إدخال العنوان بالتفصيل.'); hasError = true; }
+  if (hasError) return;
+
+  const total = pendingCheckoutItem.price * pendingCheckoutItem.quantity;
+  const payload = {
+    customerName: name,
+    phone,
+    governorate,
+    address,
+    notes,
+    items: [pendingCheckoutItem],
+    totalAmount: total,
+  };
+
+  const btn = document.getElementById('confirmOrderBtn');
+  isSubmittingOrder = true;
+  btn.disabled = true;
+  btn.textContent = 'جارٍ إرسال الطلب...';
+
+  try {
+    const api = window.api;
+    const result = await api.createOrder(payload);
+    document.getElementById('checkoutModal').style.display = 'none';
+    document.getElementById('successOrderNumber').textContent = `#${result.orderNumber}`;
+    document.getElementById('orderSuccessModal').style.display = 'flex';
+    document.getElementById('checkoutForm').reset();
+    pendingCheckoutItem = null;
+  } catch (err) {
+    console.error('[Checkout] createOrder error:', err);
+    const generalErr = document.getElementById('ckGeneralError');
+    generalErr.textContent = err.message || 'تعذّر إرسال الطلب، تحقق من الاتصال وحاول مجددًا.';
+    generalErr.style.display = 'block';
+  } finally {
+    isSubmittingOrder = false;
+    btn.disabled = false;
+    btn.textContent = 'تأكيد الطلب';
+  }
 });
 
 window.closeModal = () => {

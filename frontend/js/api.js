@@ -8,7 +8,8 @@
 class PilatesApiService {
   constructor() {
     // رابط الباك إند الفعلي على Railway (بعد رفع الموقع)
-this.baseUrl = 'https://am-sport-backend-production-0fac.up.railway.app/api';  }
+    this.baseUrl = 'https://itgirl-pilates-production.up.railway.app/api';
+  }
 
   /* ── جلب كل المنتجات ─────────────────────────────── */
   async getAllProducts() {
@@ -27,6 +28,18 @@ this.baseUrl = 'https://am-sport-backend-production-0fac.up.railway.app/api';  }
       },
       body: JSON.stringify(payload),
     });
+  }
+
+  /* ── إنشاء طلب جديد (بدون تسجيل دخول) ─────────────── */
+  async createOrder(payload) {
+    const res = await fetch(`${this.baseUrl}/orders`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.message || 'حدث خطأ أثناء إرسال الطلب');
+    return data;
   }
 
   /* ── تحديث منتج موجود ─────────────────────────────── */
@@ -52,14 +65,9 @@ this.baseUrl = 'https://am-sport-backend-production-0fac.up.railway.app/api';  }
   }
 
   /* ── تجهيز رابط الصورة (لو الرابط ناقص أو نسبي) ───── */
-    resolveImageUrl(image) {
+  resolveImageUrl(image) {
     if (!image) {
       return 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=600&auto=format&fit=crop';
-    }
-    const rawMatch = image.match(/^https?:\/\/raw\.githubusercontent\.com\/([^/]+)\/([^/]+)\/([^/]+)\/(.+)$/);
-    if (rawMatch) {
-      const [, user, repo, ref, path] = rawMatch;
-      return `https://cdn.jsdelivr.net/gh/${user}/${repo}@${ref}/${path}`;
     }
     if (image.startsWith('http://') || image.startsWith('https://')) {
       return image;

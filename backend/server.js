@@ -7,6 +7,7 @@ import connectDatabase from './config/db.js';
 import productRoutes from './routes/productRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import customerRoutes from './routes/customerRoutes.js';
+import orderRoutes from './routes/orderRoutes.js';
 
 dotenv.config();
 const app = express();
@@ -20,6 +21,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/customers', customerRoutes);
+app.use('/api/orders', orderRoutes);
 
 // جعل مجلد uploads مرئياً ليتمكن الموقع من قراءة الصور
 const __dirname = path.resolve();
